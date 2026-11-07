@@ -61,6 +61,72 @@ Mean output-shift L2 by modality (shared | independent-target):
 
 These results demonstrate **causal coupling by construction**, not learned semantic coherence or a performance advantage. The independent all-local control reaches full output coverage by spending three independent edits; it does not have one common latent cause. The projection maps are random and untrained. The experiment does not compare semantic quality, task accuracy, robustness, or sample efficiency.
 
+
+## Real-only vs complex-preserving projection benchmark
+
+Run:
+
+```bash
+python complex_projection_benchmark.py
+```
+
+The benchmark compares the current map
+
+```python
+y_real = real(W @ z)
+```
+
+with a complex projection that retains both output channels:
+
+```python
+A = (W + 1j * V) / sqrt(2)
+y_complex = A @ z
+```
+
+Here `W` and `V` are independent real Gaussian matrices with entries scaled by `1/sqrt(D)`. Thus `E|A_ij|^2 = 1/D`. The complex result is kept complex; neither its real nor imaginary output is discarded. To compare output energy fairly, RMS is normalized by the number of real scalar channels: `sqrt(m)` for the real map and `sqrt(2*m)` for the complex map.
+
+**Matched protocol:** 32 deterministic seeds, 50 common random tangent directions per seed (1,600 interventions). Within each seed, both methods use the same normalized complex latent state and the same tangent directions. Projection dimensions remain text `(16,64)`, image `(64,64)`, and physics `(4,64)`.
+
+Two measurements are reported:
+
+1. **Modality coverage:** fraction of the three outputs whose directional derivative is nonzero after one shared-state edit.
+2. **Sensitivity-profile concordance:** for each seed, Pearson correlations between the three modality response-RMS profiles across 50 perturbations; report the average of the three modality pairs. This measures whether modalities' response magnitudes co-vary across perturbations. It is not a measure of semantic alignment.
+
+A separate **imaginary-only tangent probe** constructs unit tangent directions of the form `t = i*v`, with real `v` orthogonal to both `Re(z)` and `Im(z)`. For the current real-only map, `Re(W @ t)` is exactly zero. A generic complex projection responds to this direction. This directly tests the information blind spot rather than inferring it from random perturbations.
+
+### Executed reference output
+
+```text
+Matched projection benchmark: real-only vs complex-preserving
+D=64  seeds=32  perturbations/seed=50  total=1600
+General tangent edits: modality output coverage
+  real-only : 1.000
+  complex   : 1.000
+Sensitivity-profile concordance (mean +/- SD over 32 seed-level averages)
+  real-only : 0.0901 +/- 0.0957
+  complex   : 0.0125 +/- 0.0881
+  complex - real: -0.0777
+Imaginary-only tangent probe: RMS directional derivative
+  real-only : 0.00000000
+  complex   : 0.087424
+  max real-only imaginary leakage: 0.000e+00
+General-edit sensitivity RMS per real output channel:
+  text   : real=0.087233  complex=0.087689
+  image  : real=0.088280  complex=0.088219
+  physics: real=0.083962  complex=0.086687
+```
+
+### Interpretation
+
+- **No coverage gain:** both designs already transmit one shared-latent edit to all three outputs (100% coverage).
+- **Clear observability gain:** the real-only map has an exact null response to the tested imaginary-only tangent directions; the complex map does not.
+- **No evidence of stronger cross-modal coupling:** complex sensitivity-profile concordance was lower in this random-projection experiment (0.0125 vs 0.0901). The difference is descriptive; this small random-projection study does not establish a statistically robust disadvantage.
+- **Comparable ordinary sensitivity:** per-real-channel RMS responses are similar for all three modalities under general tangent edits.
+
+The result is therefore: complex projections preserve access to both latent quadratures, but random complex matrices do not automatically make modality responses more coordinated or semantically aligned. The projection is still compressive (especially physics: 4 complex outputs from 64 complex latent dimensions), and it is not an invertible encoding of the entire latent state.
+
+A stronger-coupling hypothesis needs an additional mechanism—such as shared structured projections, cross-modal alignment losses, or decoders trained on paired observations—and a task-level benchmark using actual aligned data. This experiment isolates projection algebra only; it does not test training, semantics, or downstream accuracy.
+
 ## Scope
 
 An executable architecture sketch, not a trained multimodal model, benchmark, or scientific claim.
