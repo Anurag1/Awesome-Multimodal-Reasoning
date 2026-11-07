@@ -55,8 +55,8 @@ independent all-local edits    : 1.000
 independent off-target leakage : 0.000e+00
 Mean output-shift L2 by modality (shared | independent-target):
   text   : 0.034288 | 0.033945
-  image  : 0.070474 | 0.071364
-  physics: 0.016231 | 0.016325
+  image  : 0.070474 | 0.071365
+  physics: 0.016231 | 0.016327
 ```
 
 These results demonstrate **causal coupling by construction**, not learned semantic coherence or a performance advantage. The independent all-local control reaches full output coverage by spending three independent edits; it does not have one common latent cause. The projection maps are random and untrained. The experiment does not compare semantic quality, task accuracy, robustness, or sample efficiency.
