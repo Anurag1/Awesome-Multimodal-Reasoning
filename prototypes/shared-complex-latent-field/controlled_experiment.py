@@ -51,6 +51,8 @@ def run():
         independent_base = {
             n: project(independent_z[n], matrices[n]) for n in NAMES
         }
+        for name, dim in OUT.items():
+            assert matrices[name].shape == (dim, D)
 
         for step in range(N_PERTURBATIONS):
             target = NAMES[step % len(NAMES)]
@@ -71,10 +73,9 @@ def run():
             independent_cover.append(sum(
                 changed(independent_base[n], independent_after[n]) for n in NAMES
             ) / len(NAMES))
-            for n in NAMES:
-                independent_norms[n].append(
-                    np.linalg.norm(independent_after[n] - independent_base[n])
-                )
+            independent_norms[target].append(
+                np.linalg.norm(independent_after[target] - independent_base[target])
+            )
             total = sum(np.linalg.norm(independent_after[n] - independent_base[n])
                         for n in NAMES)
             off_target = sum(
